@@ -1,0 +1,167 @@
+{{- if eq .Values.kind "Job" -}}
+{{- $servicePrefix := .Values.nameOverride | default .Release.Name -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ $servicePrefix }}-job
+  labels:
+    app: {{ $servicePrefix }}-app
+    onechart.kubernetes.io/name: {{ $servicePrefix }}
+spec:
+  backoffLimit: {{ .Values.job.backoffLimit | default 3 }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished | default 3600 }}
+  {{- if .Values.job.activeDeadlineSeconds }}
+  activeDeadlineSeconds: {{ .Values.job.activeDeadlineSeconds }}
+  {{- end }}
+  {{- if .Values.job.parallelism }}
+  parallelism: {{ .Values.job.parallelism }}
+  {{- end }}
+  {{- if .Values.job.completions }}
+  completions: {{ .Values.job.completions }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        app: {{ $servicePrefix }}-app
+      {{- if .Values.podSpec.annotations }}
+      annotations:
+      {{- toYaml .Values.podSpec.annotations | nindent 8 }}
+      {{- end }}
+    spec:
+      restartPolicy: {{ .Values.job.restartPolicy | default "OnFailure" }}
+      {{- if .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml .Values.hostAliases | nindent 8 }}
+      {{- end }}
+      imagePullSecrets:
+        {{- range .Values.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- if .Values.podSpec.securityContext }}
+      securityContext:
+        {{- toYaml .Values.podSpec.securityContext | nindent 8 }}
+      {{- end }}
+      {{- if .Values.initContainers }}
+      initContainers:
+        {{- range .Values.initContainers }}
+        - name: {{ $servicePrefix }}-{{ .name }}-init-container
+          image: "{{ .image }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy | default "Always" }}
+          resources:
+            {{- toYaml $.Values.resources | nindent 12 }}
+          {{- if .command }}
+          command:
+            - {{ .shell }}
+            - -c
+            - {{ .command | quote }}
+          {{- end }}
+          {{- if .args }}
+          args:
+          {{- toYaml .args | nindent 12 }}
+          {{- end }}
+          {{- if or $.Values.container.env .env }}
+          env:
+          {{- if $.Values.container.env }}
+          {{- toYaml $.Values.container.env | nindent 12 }}
+          {{- end }}
+          {{- if .env }}
+          {{- toYaml .env | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- if $.Values.volumes }}
+          volumeMounts:
+            {{- range $.Values.volumes }}
+            - name: {{ .name }}-volume
+              mountPath: {{ .path }}
+              {{- if .subPath }}
+              subPath: {{ .subPath }}
+              {{- end }}
+              {{- if .readOnly }}
+              readOnly: true
+              {{- end }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ $servicePrefix }}-job-container
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
+          {{- if .Values.command }}
+          command:
+            - {{ .Values.shell }}
+            - -c
+            - {{ .Values.command | quote }}
+          {{- end }}
+          {{- if .Values.container.args }}
+          args:
+          {{- toYaml .Values.container.args | nindent 12 }}
+          {{- end }}
+          {{- if .Values.container.env }}
+          env:
+          {{- toYaml .Values.container.env | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ $servicePrefix }}-configmap
+            {{- if .Values.secrets.enabled }}
+            - secretRef:
+                name: {{ $servicePrefix }}-secret
+            {{- end }}
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.volumes }}
+          volumeMounts:
+            {{- range .Values.volumes }}
+            - name: {{ .name }}-volume
+              mountPath: {{ .path }}
+              {{- if .subPath }}
+              subPath: {{ .subPath }}
+              {{- end }}
+              {{- if .readOnly }}
+              readOnly: true
+              {{- end }}
+            {{- end }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.volumes }}
+      volumes:
+        {{- range .Values.volumes }}
+        - name: {{ .name }}-volume
+          {{- if eq .type "secret" }}
+          secret:
+            {{- with .spec }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          {{- if eq .type "configMap" }}
+          configMap:
+            {{- with .spec }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          {{- if eq .type "static-pvc" }}
+          persistentVolumeClaim:
+            claimName: {{ .name }}
+          {{- end }}
+          {{- if eq .type "dynamic-pvc" }}
+          persistentVolumeClaim:
+            claimName: {{ $servicePrefix }}-{{ .name }}-data
+          {{- end }}
+        {{- end }}
+      {{- end }}
+{{- end }}
