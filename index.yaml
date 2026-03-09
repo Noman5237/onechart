@@ -3,22 +3,22 @@ entries:
   onechart:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-01-11T02:28:14.213816314+06:00"
-    description: A Helm chart for Kubernetes Application Deployment
-    digest: 343dc202542d05107a4d305eb898c5bdc6ade03bb65331d073acf3ce6ead3e6b
-    name: onechart
-    type: application
-    urls:
-      - https://noman5237.github.io/onechart/onechart-0.3.0.tgz
-    version: 0.3.0
-  - apiVersion: v2
-    appVersion: 0.0.1
-    created: "2025-05-27T17:40:08.643754112+06:00"
+    created: "2026-03-09T13:12:44.433106168+06:00"
     description: A Helm chart for Kubernetes Application Deployment
     digest: 4a3f162cce7dbc0e73383d782363eec14ce8723dee076144a1db4565f58b8a60
     name: onechart
     type: application
     urls:
-    - https://noman5237.github.io/onechart/onechart-0.3.1.tgz
+    - onechart-0.3.1.tgz
     version: 0.3.1
-generated: "2025-05-27T17:40:08.642854927+06:00"
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2026-03-09T13:12:44.432877989+06:00"
+    description: A Helm chart for Kubernetes Application Deployment
+    digest: dadcd1d78afdd6cdb75804e358e79ba3970e996e848c1f960c35d9013ef1cb74
+    name: onechart
+    type: application
+    urls:
+    - onechart-0.3.0.tgz
+    version: 0.3.0
+generated: "2026-03-09T13:12:44.432249374+06:00"
