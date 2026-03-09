@@ -1,0 +1,90 @@
+nameOverride: "my-job"
+kind: Job
+
+image:
+  repository: nginx
+  pullPolicy: Always
+  tag: ""
+
+imagePullSecrets:
+  - fintech-harbor
+
+config:
+  SUITE: "payment"
+  MINIO_ENDPOINT: "http://minio:9000"
+  MINIO_ACCESS_KEY: "minioadmin"
+  MINIO_SECRET_KEY: "minioadmin"
+  MINIO_BUCKET: "test-artifacts"
+
+secrets:
+  enabled: true
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+job:
+  restartPolicy: OnFailure
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  activeDeadlineSeconds: 1800
+  parallelism: 1
+  completions: 1
+
+command: "echo hello && exit 0"
+shell: "/bin/sh"
+
+container:
+  env:
+    - name: SOME_VAR
+      value: "some-value"
+  args:
+    - "--verbose"
+
+volumes:
+  - name: config
+    type: configMap
+    path: /app/config
+    spec:
+      name: my-configmap
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "jobs"
+    effect: "NoSchedule"
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-type
+              operator: In
+              values:
+                - worker
+
+initContainers:
+  - name: wait-for-db
+    image: busybox
+    shell: "/bin/sh"
+    command: "until nc -z db 5432; do echo waiting; sleep 2; done"
+
+podSpec:
+  annotations:
+    prometheus.io/scrape: "false"
+  securityContext:
+    runAsUser: 1000
+    fsGroup: 2000
+
+hostAliases:
+  - ip: "192.168.1.100"
+    hostnames:
+      - "my-internal-service"
