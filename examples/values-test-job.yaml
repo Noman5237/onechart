@@ -2,9 +2,9 @@ nameOverride: "my-job"
 kind: Job
 
 image:
-  repository: nginx
+  repository: busybox
   pullPolicy: Always
-  tag: ""
+  tag: "latest"
 
 imagePullSecrets:
   - fintech-harbor
@@ -21,11 +21,11 @@ secrets:
 
 resources:
   requests:
-    memory: "256Mi"
-    cpu: "100m"
+    memory: "64Mi"
+    cpu: "50m"
   limits:
-    memory: "512Mi"
-    cpu: "500m"
+    memory: "128Mi"
+    cpu: "100m"
 
 job:
   restartPolicy: OnFailure
@@ -35,15 +35,24 @@ job:
   parallelism: 1
   completions: 1
 
-command: "echo hello && exit 0"
-shell: "/bin/sh"
+containers:
+  - name: main
+    image: "busybox:latest"
+    shell: "/bin/sh"
+    command: "echo hello from main && sleep 5 && echo done"
+    env:
+      - name: SOME_VAR
+        value: "some-value"
+    args:
+      - "--verbose"
 
-container:
-  env:
-    - name: SOME_VAR
-      value: "some-value"
-  args:
-    - "--verbose"
+  - name: sidecar
+    image: "busybox:latest"
+    shell: "/bin/sh"
+    command: "echo hello from sidecar && sleep 3"
+    env:
+      - name: SIDECAR_VAR
+        value: "sidecar-value"
 
 volumes:
   - name: config
@@ -72,10 +81,13 @@ affinity:
                 - worker
 
 initContainers:
-  - name: wait-for-db
-    image: busybox
+  - name: wait-for-service
+    image: busybox:latest
     shell: "/bin/sh"
-    command: "until nc -z db 5432; do echo waiting; sleep 2; done"
+    command: "echo init container running && sleep 2 && echo init done"
+    env:
+      - name: INIT_VAR
+        value: "init-value"
 
 podSpec:
   annotations:

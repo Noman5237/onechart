@@ -48,8 +48,10 @@ spec:
         - name: {{ $servicePrefix }}-{{ .name }}-init-container
           image: "{{ .image }}"
           imagePullPolicy: {{ $.Values.image.pullPolicy | default "Always" }}
+          {{- if $.Values.resources }}
           resources:
             {{- toYaml $.Values.resources | nindent 12 }}
+          {{- end }}
           {{- if .command }}
           command:
             - {{ .shell }}
@@ -60,14 +62,9 @@ spec:
           args:
           {{- toYaml .args | nindent 12 }}
           {{- end }}
-          {{- if or $.Values.container.env .env }}
-          env:
-          {{- if $.Values.container.env }}
-          {{- toYaml $.Values.container.env | nindent 12 }}
-          {{- end }}
           {{- if .env }}
+          env:
           {{- toYaml .env | nindent 12 }}
-          {{- end }}
           {{- end }}
           {{- if $.Values.volumes }}
           volumeMounts:
@@ -85,37 +82,38 @@ spec:
         {{- end }}
       {{- end }}
       containers:
-        - name: {{ $servicePrefix }}-job-container
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy | default "Always" }}
-          {{- if .Values.command }}
+        {{- range .Values.containers }}
+        - name: {{ $servicePrefix }}-{{ .name }}-container
+          image: "{{ .image }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy | default "Always" }}
+          {{- if .command }}
           command:
-            - {{ .Values.shell }}
+            - {{ .shell }}
             - -c
-            - {{ .Values.command | quote }}
+            - {{ .command | quote }}
           {{- end }}
-          {{- if .Values.container.args }}
+          {{- if .args }}
           args:
-          {{- toYaml .Values.container.args | nindent 12 }}
+          {{- toYaml .args | nindent 12 }}
           {{- end }}
-          {{- if .Values.container.env }}
+          {{- if .env }}
           env:
-          {{- toYaml .Values.container.env | nindent 12 }}
+          {{- toYaml .env | nindent 12 }}
           {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ $servicePrefix }}-configmap
-            {{- if .Values.secrets.enabled }}
+            {{- if $.Values.secrets.enabled }}
             - secretRef:
                 name: {{ $servicePrefix }}-secret
             {{- end }}
-          {{- if .Values.resources }}
+          {{- if $.Values.resources }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml $.Values.resources | nindent 12 }}
           {{- end }}
-          {{- if .Values.volumes }}
+          {{- if $.Values.volumes }}
           volumeMounts:
-            {{- range .Values.volumes }}
+            {{- range $.Values.volumes }}
             - name: {{ .name }}-volume
               mountPath: {{ .path }}
               {{- if .subPath }}
@@ -126,6 +124,7 @@ spec:
               {{- end }}
             {{- end }}
           {{- end }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
