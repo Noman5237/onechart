@@ -9,7 +9,7 @@ metadata:
     app: {{ $servicePrefix }}-app
     onechart.kubernetes.io/name: {{ $servicePrefix }}
 spec:
-  backoffLimit: {{ .Values.job.backoffLimit | default 3 }}
+  backoffLimit: {{ .Values.job.backoffLimit | default 0 }}
   ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished | default 3600 }}
   {{- if .Values.job.activeDeadlineSeconds }}
   activeDeadlineSeconds: {{ .Values.job.activeDeadlineSeconds }}
