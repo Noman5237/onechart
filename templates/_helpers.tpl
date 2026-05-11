@@ -60,3 +60,51 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Vault role: explicit override or <team>-<namespace>.
+*/}}
+{{- define "onechart.vaultRole" -}}
+{{- $vault := .Values.secrets.vault -}}
+{{- $vault.role | default (printf "%s-%s" $vault.team .Release.Namespace) -}}
+{{- end -}}
+
+{{/*
+Vault secret path for one file entry. Engine is inferred from the filename:
+  database.properties -> DB dynamic creds at <team>-<namespace>/creds/<team>
+  anything else       -> KV v2 at <team>-<namespace>-kv/data/<.Release.Name>
+An explicit file.secretPath always wins. Call with:
+  (dict "ctx" $ "file" $f)
+*/}}
+{{- define "onechart.vaultSecretPath" -}}
+{{- $vault := .ctx.Values.secrets.vault -}}
+{{- $file := .file -}}
+{{- if $file.secretPath -}}
+{{- $file.secretPath -}}
+{{- else if eq $file.name "database.properties" -}}
+{{- printf "%s-%s/creds/%s" $vault.team .ctx.Release.Namespace $vault.team -}}
+{{- else -}}
+{{- printf "%s-%s-kv/data/%s" $vault.team .ctx.Release.Namespace .ctx.Release.Name -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Body of the vault-injected template for one file entry. database.properties
+emits {{ .Data.<last-token-lower> }} (matches Vault DB engine output); any
+other file emits {{ .Data.data.<KEY> }} (matches Vault KV v2 output).
+Call with: (dict "ctx" $ "file" $f)
+*/}}
+{{- define "onechart.vaultSecretTemplate" -}}
+{{- $file := .file -}}
+{{- $secretPath := include "onechart.vaultSecretPath" (dict "ctx" .ctx "file" $file) -}}
+{{ printf "{{- with secret %q }}" $secretPath }}
+{{- range $env := $file.keys }}
+{{- if eq $file.name "database.properties" }}
+{{- $field := $env | splitList "_" | last | lower }}
+{{ $env }}={{ printf "{{ .Data.%s }}" $field }}
+{{- else }}
+{{ $env }}={{ printf "{{ .Data.data.%s }}" $env }}
+{{- end }}
+{{- end }}
+{{ "{{- end }}" }}
+{{- end -}}

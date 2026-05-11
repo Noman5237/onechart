@@ -19,6 +19,28 @@ spec:
         app: {{ $servicePrefix }}-app
       annotations:
         rollme: {{ randAlphaNum 16 | quote }}
+      {{- if .Values.secrets.vault.enabled }}
+      {{- $vault := .Values.secrets.vault }}
+      {{- $agentCache := ternary ($vault.agentCache | toString) "true" (hasKey $vault "agentCache") }}
+      {{- $agentInject := ternary ($vault.agentInject | toString) "true" (hasKey $vault "agentInject") }}
+        vault.hashicorp.com/auth-path: {{ $vault.authPath | default "auth/dev-cluster" | quote }}
+        vault.hashicorp.com/service: {{ $vault.service | default "http://vault.vault.svc.cluster.local:8200" | quote }}
+        vault.hashicorp.com/agent-inject: {{ $agentInject | quote }}
+        vault.hashicorp.com/role: {{ include "onechart.vaultRole" . | quote }}
+        vault.hashicorp.com/agent-cache-enable: {{ $agentCache | quote }}
+        {{- range $f := $vault.files }}
+        vault.hashicorp.com/agent-inject-secret-{{ $f.name }}: {{ include "onechart.vaultSecretPath" (dict "ctx" $ "file" $f) | quote }}
+        vault.hashicorp.com/agent-inject-template-{{ $f.name }}: |{{ include "onechart.vaultSecretTemplate" (dict "ctx" $ "file" $f) | nindent 10 }}
+        {{- $refresh := $f.refreshUrl }}
+        {{- if and (not $refresh) (eq $f.name "database.properties") }}
+        {{- $refresh = "http://127.0.0.1:8080/actuator/refresh" }}
+        {{- end }}
+        {{- if $refresh }}
+        vault.hashicorp.com/agent-inject-command-{{ $f.name }}: |
+          wget -qO- --header='Content-Type:application/json' --post-data='{}' {{ $refresh }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
       {{- if .Values.podSpec.annotations }}
       {{- toYaml .Values.podSpec.annotations | nindent 8 }}
       {{- end }}

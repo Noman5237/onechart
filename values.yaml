@@ -12,10 +12,71 @@ image:
 imagePullSecrets: []
 
 secrets:
-  enabled: false
   vault:
-    enabled: false
-    path: ""
+    enabled: true
+
+    # Team identifier (e.g. "payments"). Combined with .Release.Namespace and
+    # .Release.Name to derive role and Vault secret paths.
+    # e.g. team=payments + namespace=production → role: payments-production
+    team: ""
+
+    # Optional: override the auto-generated Vault auth role.
+    # Default: "<team>-<namespace>"
+    # role: "dev-monifly"
+
+    # Vault auth backend mount path.
+    # Default: "auth/dev-cluster"
+    # authPath: "auth/prod-cluster"
+
+    # Vault server address reachable from inside the cluster.
+    # Default: "http://vault.vault.svc.cluster.local:8200"
+    # service: "http://vault.vault.svc.cluster.local:8200"
+
+    # Enable Vault agent token cache (reduces Vault API calls).
+    # Default: true
+    # agentCache: true
+    # Enable Vault agent sidecar injection.
+    # Default: true , unless agentInject is explicitly set to false
+    # agentInject: true
+
+    # Files to inject into the pod. The Vault engine is picked from the
+    # filename:
+    #   database.properties -> DB dynamic creds at <team>-<namespace>/creds/<team>
+    #                          MASTER_DB_USERNAME -> .Data.username
+    #                          refresh command auto-emitted to
+    #                          http://127.0.0.1:8080/actuator/refresh
+    #   any other name      -> KV v2 at <team>-<namespace>-kv/data/<.Release.Name>
+    #                          MAIL_HOST -> .Data.data.MAIL_HOST
+    #                          no refresh command by default
+    files:
+      - name: database.properties
+        keys:
+          - MASTER_DB_USERNAME
+          - MASTER_DB_PASSWORD
+          - DB_SLAVE_USERNAME
+          - DB_SLAVE_PASSWORD
+        # Optional: override the auto-generated Vault secret path.
+        # Default for database.properties: "<team>-<namespace>/creds/<team>"
+        # secretPath: "payments-production/creds/payments"
+
+        # Optional: override the default Spring actuator refresh URL.
+        # Default for database.properties: "http://127.0.0.1:8080/actuator/refresh"
+        # refreshUrl: "http://127.0.0.1:8080/actuator/refresh"
+
+    #   - name: app.properties
+    #     keys:
+    #       - MAIL_HOST
+    #       - MAIL_PORT
+    #       - MAIL_USERNAME
+    #       - MAIL_PASSWORD
+    #     # Optional: override the auto-generated Vault secret path.
+    #     # Default for KV v2: "<team>-<namespace>-kv/data/<release-name>"
+    #     # secretPath: "payments-production-kv/data/myapp"
+    #
+    #     # Optional: emit a refresh command after Vault writes this file.
+    #     # No default for non-database.properties files.
+    #     # refreshUrl: "http://127.0.0.1:8080/actuator/refresh"
+
 
 service:
   - name: api
