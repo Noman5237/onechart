@@ -1,0 +1,102 @@
+nameOverride: "my-job"
+kind: Job
+
+image:
+  repository: busybox
+  pullPolicy: Always
+  tag: "latest"
+
+imagePullSecrets:
+  - fintech-harbor
+
+config:
+  SUITE: "payment"
+  MINIO_ENDPOINT: "http://minio:9000"
+  MINIO_ACCESS_KEY: "minioadmin"
+  MINIO_SECRET_KEY: "minioadmin"
+  MINIO_BUCKET: "test-artifacts"
+
+secrets:
+  enabled: true
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "50m"
+  limits:
+    memory: "128Mi"
+    cpu: "100m"
+
+job:
+  restartPolicy: OnFailure
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  activeDeadlineSeconds: 1800
+  parallelism: 1
+  completions: 1
+
+containers:
+  - name: main
+    image: "busybox:latest"
+    shell: "/bin/sh"
+    command: "echo hello from main && sleep 5 && echo done"
+    env:
+      - name: SOME_VAR
+        value: "some-value"
+    args:
+      - "--verbose"
+
+  - name: sidecar
+    image: "busybox:latest"
+    shell: "/bin/sh"
+    command: "echo hello from sidecar && sleep 3"
+    env:
+      - name: SIDECAR_VAR
+        value: "sidecar-value"
+
+volumes:
+  - name: config
+    type: configMap
+    path: /app/config
+    spec:
+      name: my-configmap
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "jobs"
+    effect: "NoSchedule"
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-type
+              operator: In
+              values:
+                - worker
+
+initContainers:
+  - name: wait-for-service
+    image: busybox:latest
+    shell: "/bin/sh"
+    command: "echo init container running && sleep 2 && echo init done"
+    env:
+      - name: INIT_VAR
+        value: "init-value"
+
+podSpec:
+  annotations:
+    prometheus.io/scrape: "false"
+  securityContext:
+    runAsUser: 1000
+    fsGroup: 2000
+
+hostAliases:
+  - ip: "192.168.1.100"
+    hostnames:
+      - "my-internal-service"

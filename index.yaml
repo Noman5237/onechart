@@ -3,7 +3,17 @@ entries:
   onechart:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2026-07-14T07:11:41.710090276+06:00"
+    created: "2026-07-16T18:00:29.631235315+06:00"
+    description: A Helm chart for Kubernetes Application Deployment
+    digest: 13998bb3c97f55d7f553e059fe7c4b8cbf913a0ed117bf14876e1364d3953f8a
+    name: onechart
+    type: application
+    urls:
+    - https://noman5237.github.io/onechart/onechart-0.3.6.tgz
+    version: 0.3.6
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2026-07-16T18:00:29.630953206+06:00"
     description: A Helm chart for Kubernetes Application Deployment
     digest: 23bfd273acf851bae1ec599dd10161e7dda00901ca4a734a9bb56ce8a9aab869
     name: onechart
@@ -13,7 +23,7 @@ entries:
     version: 0.3.5
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2026-07-14T07:11:41.709667232+06:00"
+    created: "2026-07-16T18:00:29.630698538+06:00"
     description: A Helm chart for Kubernetes Application Deployment
     digest: 6ffa481c53d363c2cf66365b5c4dd704db0f37cd74e819bc1058f3ed81f8236d
     name: onechart
@@ -23,7 +33,7 @@ entries:
     version: 0.3.4
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2026-07-14T07:11:41.709249087+06:00"
+    created: "2026-07-16T18:00:29.630452155+06:00"
     description: A Helm chart for Kubernetes Application Deployment
     digest: c7904c927027b01d322f7b4b49e08cd194d302fd547bd2b1b22711c981f8a215
     name: onechart
@@ -33,7 +43,7 @@ entries:
     version: 0.3.3
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2026-07-14T07:11:41.7074866+06:00"
+    created: "2026-07-16T18:00:29.629498222+06:00"
     description: A Helm chart for Kubernetes Application Deployment
     digest: ad916119fc70539166d85989138817a9a37e8955af84a004d3001b134fc95061
     name: onechart
@@ -43,7 +53,7 @@ entries:
     version: 0.3.2
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2026-07-14T07:11:41.70668212+06:00"
+    created: "2026-07-16T18:00:29.628988875+06:00"
     description: A Helm chart for Kubernetes Application Deployment
     digest: 4a3f162cce7dbc0e73383d782363eec14ce8723dee076144a1db4565f58b8a60
     name: onechart
@@ -53,7 +63,7 @@ entries:
     version: 0.3.1
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2026-07-14T07:11:41.70629306+06:00"
+    created: "2026-07-16T18:00:29.628709792+06:00"
     description: A Helm chart for Kubernetes Application Deployment
     digest: dadcd1d78afdd6cdb75804e358e79ba3970e996e848c1f960c35d9013ef1cb74
     name: onechart
@@ -61,4 +71,4 @@ entries:
     urls:
     - https://noman5237.github.io/onechart/onechart-0.3.0.tgz
     version: 0.3.0
-generated: "2026-07-14T07:11:41.705710146+06:00"
+generated: "2026-07-16T18:00:29.628209342+06:00"
