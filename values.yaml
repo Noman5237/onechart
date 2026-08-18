@@ -17,6 +17,8 @@ secrets:
     enabled: false
     path: ""
 
+secretConfig: {}
+
 service:
   - name: api
     type: ClusterIP

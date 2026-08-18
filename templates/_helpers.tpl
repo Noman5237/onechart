@@ -60,3 +60,13 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{- define "onechart.secretConfigEnv" -}}
+{{- range $envName, $reference := . }}
+- name: {{ $envName | quote }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ required (printf "secretConfig.%s.secretName is required" $envName) $reference.secretName | quote }}
+      key: {{ required (printf "secretConfig.%s.key is required" $envName) $reference.key | quote }}
+{{- end }}
+{{- end }}

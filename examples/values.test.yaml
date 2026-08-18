@@ -15,6 +15,14 @@ imagePullSecrets:
 config:
   EXAMPLE: "EXAMPLE"
 
+secretConfig:
+  DB_PASSWORD:
+    secretName: db-creds
+    key: password
+  AWS_ACCESS_KEY_ID:
+    secretName: aws-creds
+    key: access-key-id
+
 secrets:
   enabled: false
   vault:

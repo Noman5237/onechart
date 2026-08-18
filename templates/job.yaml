@@ -97,9 +97,14 @@ spec:
           args:
           {{- toYaml .args | nindent 12 }}
           {{- end }}
-          {{- if .env }}
+          {{- if or .env .secretConfig }}
           env:
-          {{- toYaml .env | nindent 12 }}
+          {{- with .env }}
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .secretConfig }}
+          {{- include "onechart.secretConfigEnv" . | nindent 12 }}
+          {{- end }}
           {{- end }}
           envFrom:
             - configMapRef:
@@ -140,9 +145,14 @@ spec:
           args:
           {{- toYaml .Values.container.args | nindent 12 }}
           {{- end }}
-          {{- if .Values.container.env }}
+          {{- if or .Values.container.env .Values.secretConfig }}
           env:
-          {{- toYaml .Values.container.env | nindent 12 }}
+          {{- with .Values.container.env }}
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.secretConfig }}
+          {{- include "onechart.secretConfigEnv" . | nindent 12 }}
+          {{- end }}
           {{- end }}
           envFrom:
             - configMapRef:
