@@ -80,9 +80,14 @@ spec:
       {{- end }}
       containers:
         - name: {{ $servicePrefix }}-container
-          {{- if .Values.container.env }}
+          {{- if or .Values.container.env .Values.secretConfig }}
           env:
-          {{- toYaml .Values.container.env | nindent 12 }}
+          {{- with .Values.container.env }}
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.secretConfig }}
+          {{- include "onechart.secretConfigEnv" . | nindent 12 }}
+          {{- end }}
           {{- end }}
           envFrom:
             - configMapRef:

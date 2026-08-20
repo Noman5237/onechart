@@ -37,6 +37,7 @@ The following table lists the configurable parameters of the `onechart` chart an
 | `image.tag`                      | Image tag                                       | `""`                           |
 | `imagePullSecrets`               | Image pull secrets                              | `fintech-harbor`               |
 | `config.EXAMPLE`                 | Example configuration                           | `EXAMPLE`                      |
+| `secretConfig`                   | Secret-backed environment variables             | `{}`                           |
 | `secrets.enabled`                | Enable secrets                                  | `false`                        |
 | `fileSecrets`                    | File secrets configuration                      | See `values.yaml`              |
 | `service`                        | Service configuration                           | See `values.yaml`              |
@@ -65,6 +66,36 @@ The following table lists the configurable parameters of the `onechart` chart an
 | `container.annotations`          | Annotations for the container                   | `{}`                           |
 | `container.securityContext`      | Security context for the container              | `{}`                           |
 | `initContainers`                 | Init containers configuration                   | See `values.yaml`              |
+
+### Existing Kubernetes Secrets
+
+Use `secretConfig` to expose only reviewed keys from existing Kubernetes
+Secrets. The chart does not create, copy, or manage those Secrets.
+
+```yaml
+config:
+  DB_URL: "jdbc:postgresql://postgres:5432/application"
+
+secretConfig:
+  DB_USER:
+    secretName: db-creds
+    key: username
+  DB_PASSWORD:
+    secretName: db-creds
+    key: password
+  AWS_ACCESS_KEY_ID:
+    secretName: aws-creds
+    key: access-key-id
+```
+
+This renders native `valueFrom.secretKeyRef` entries in the primary
+Deployment, StatefulSet, or Job container. A missing Secret or key prevents
+the Pod from starting. For a Job that defines `containers`, place a
+`secretConfig` map under each container that needs the credentials; credentials
+are not automatically shared with every Job container.
+
+`container.env` remains available for native Kubernetes environment entries,
+and the legacy `secrets.enabled` behavior remains unchanged.
 
 ## Notes
 
